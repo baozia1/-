@@ -1,0 +1,19 @@
+npm install --save-dev less-loader style-loader less
+
+在base中ruler下配置
+module.exports = {
+  module: {
+    rules: [
+      {   //把这个对象添加在里面
+        test: /\.less$/,
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          'less-loader'
+        ]
+      }
+    ]
+  }
+}
+
+style文件放入src/common/下

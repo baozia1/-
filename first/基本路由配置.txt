@@ -1,0 +1,30 @@
+html中
+用router-link来导航，to来指定链接（与routes中的path路径相对应），router-link会被默认渲染为一个<a>
+<router-link to="Foo">Go to the Foo</router-link>
+路由出口
+渲染的组件将出现在这里
+<router-view></router-view>
+
+路由配置步骤
+1.定义组件
+const Foo={template:"<div>foo</div>"}
+const Bar={template:"<div>bar</div>"}
+
+2.定义路由
+const routes=[
+{path="Foo",component:Foo}
+]
+
+3.实例化路由
+var router=new VueRouter({
+routes
+})
+
+4.实例化Vue
+var app=new Vue({
+router
+}).$mount("#app")
+
+Vue中
+可用this.$router访问路由
+this.$route访问当前路由

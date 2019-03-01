@@ -1,0 +1,22 @@
+
+https://github.com/nuysoft/Mock/wiki/Getting-Started
+
+
+直接引入<script src="http://mockjs.com/dist/mock.js"></script>;
+npm install mockjs
+
+npm install -g bower
+bower install --save mockjs
+
+# 全局安装
+$ npm install mockjs -g
+
+# 执行
+$ random url
+# => http://rmcpx.org/funzwc
+
+# 帮助
+random -h
+
+mock可以根据数据模板生产数据
+模拟ajax请求 生成并返回模拟数据

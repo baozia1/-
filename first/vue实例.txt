@@ -1,0 +1,10 @@
+vue构造器
+var vm=new Vue(){
+         el:"", 
+         data:{}		
+}
+
+console.log(vm.$el)
+
+生命周期
+created mount  updata destory

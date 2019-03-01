@@ -1,0 +1,1 @@
+<script type="text/javascript" src="./bower_components/mockjs/dist/mock.js"></script>

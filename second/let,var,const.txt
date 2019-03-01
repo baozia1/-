@@ -1,0 +1,8 @@
+let只有在“use strict”下才能使用
+let用在函数中
+const用来定义常量
+const a
+
+const a ="b"
+const a="a"
+

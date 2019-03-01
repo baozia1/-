@@ -1,0 +1,152 @@
+'use strict'
+// 基础配置文件 webpack.base.conf.js
+// 注释参考 https://www.cnblogs.com/ye-hcj/p/7082620.html 和 https://yq.aliyun.com/articles/609824
+ 
+// 引入nodejs路径模块
+const path = require('path')
+// 引入utils工具模块，utils主要用来处理css-loader和vue-style-loader的
+const utils = require('./utils')
+// 引入config目录下的index.js配置文件，主要用来定义一些开发和生产环境的属性
+const config = require('../config')
+// vue-loader.conf配置文件是用来解决各种css文件的，定义了诸如css,less,sass之类的和样式有关的loader
+const vueLoaderConfig = require('./vue-loader.conf')
+ 
+// 获取绝对路径
+function resolve (dir) {
+  return path.join(__dirname, '..', dir)
+}
+ 
+<!-- eslint的规则定义一下代码检测的规则 -->
+const createLintingRule = () => ({
+  // 对.js和.vue结尾的文件进行eslint检查
+  test: /\.(js|vue)$/,
+  // 使用eslint-loader
+  loader: 'eslint-loader',
+  // enforce的值可能是pre和post。其中pre有点和webpack@1中的preLoader配置含义相似。
+  // post和v1中的postLoader配置含义相似。表示loader的调用时机
+  // 这里表示在调用其他loader之前需要先调用这个规则进行代码风格的检查
+  enforce: 'pre',
+  // 需要进行eslint检查的文件的目录存在的地方
+  include: [resolve('src'), resolve('test')],
+  // eslint-loader配置过程中需要指定的选项
+  options: {
+    // 文件风格的检查的格式化程序，这里使用的是第三方的eslint-friendly-formatter
+    formatter: require('eslint-friendly-formatter'),
+    // 是否需要eslint输出警告信息
+    emitWarning: !config.dev.showEslintErrorsInOverlay
+  }
+})
+ 
+module.exports = {
+  // 基础上下文
+  context: path.resolve(__dirname, '../'),
+  // webpack的入口文件
+  entry: {
+    app: './src/main.js'
+  },
+  // webpack的输出文件
+  output: {
+    // 路径是config目录下的index.js中的build配置中的assetsRoot，也就是dist目录
+    path: config.build.assetsRoot,
+    // 文件名称这里使用默认的name也就是main
+    filename: '[name].js',
+    // 上线地址，也就是真正的文件引用路径，如果是production生产环境，其实这里都是 '/'
+    publicPath: process.env.NODE_ENV === 'production'
+      ? config.build.assetsPublicPath
+      : config.dev.assetsPublicPath
+  },
+  /**
+   * 当webpack试图去加载模块的时候，它默认是查找以 .js 结尾的文件的，
+   * 所以我们要在配置文件中告诉webpack，
+   * 遇到 .vue 结尾的也要去加载,还在在module中指定rules规则,使用vue-loader插件来解析vue文件，
+   * 添加 resolve 配置项，如下：
+   */
+  resolve: {
+    // 省略扩展名，也就是说.js,.vue,.json文件导入可以省略后缀名，这会覆盖默认的配置，所以要省略扩展名在这里一定要写上
+    extensions: ['.js', '.vue', '.json'],
+    // 创建别名
+    alias: {
+      //后面的$符号指精确匹配，也就是说只能使用 import vuejs from "vue" 这样的方式导入vue.esm.js文件，不能在后面跟上 vue/vue.js
+      'vue$': 'vue/dist/vue.esm.js',
+      // resolve('src') 其实在这里就是项目根目录中的src目录，使用 import somejs from "@/some.js" 就可以导入指定文件，是不是很高大上
+      '@': resolve('src'),
+    }
+  },
+  // 不同类型模块的处理规则 就是用不同的loader处理不同的文件
+  module: {
+    noParse: [/videojs-contrib-hls/],
+    //引入jquery需要expose-loader插件
+    loaders: [
+        { test: require.resolve("jquery"), loader: "expose-loader?$" }
+    ],
+    rules: [
+      ...(config.dev.useEslint ? [createLintingRule()] : []),
+      {
+        // 对所有.vue文件使用vue-loader进行编译
+        test: /\.vue$/,
+        // 对vue文件使用vue-loader，该loader是vue单文件组件的实现核心，专门用来解析.vue文件的
+        loader: 'vue-loader',
+        // 将vueLoaderConfig当做参数传递给vue-loader,就可以解析文件中的css相关文件
+        options: vueLoaderConfig
+      },
+      {
+        // 对src和test文件夹下的.js文件使用babel-loader将es6+的代码转成es5, webpack只能识别es5表达式的语法
+        test: /\.js$/,
+        loader: 'babel-loader',
+        // 指明src和test目录下的js文件要使用该loader
+        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
+      },
+      {
+        // 对图片资源文件使用url-loader
+        test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
+        loader: 'url-loader',
+        options: {
+          // 小于10K的图片转成base64编码的dataURL字符串写到代码中
+          limit: 10000,
+          // 其他的图片转移到静态资源文件夹
+          name: utils.assetsPath('img/[name].[hash:7].[ext]')
+        }
+      },
+      {
+        // 对多媒体资源文件使用url-loader
+        test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
+        // 对图片相关的文件使用 url-loader 插件，这个插件的作用是将一个足够小的文件生成一个64位的DataURL
+        // 可能有些老铁还不知道 DataURL 是啥，当一个图片足够小，为了避免单独请求可以把图片的二进制代码变成64位的
+        // DataURL，使用src加载，也就是把图片当成一串代码，避免请求，神不神奇？？
+        loader: 'url-loader',
+        options: {
+          // 小于10K的资源转成base64编码的dataURL字符串写到代码中
+          limit: 10000,
+          // 其他的资源转移到静态资源文件夹
+          name: utils.assetsPath('media/[name].[hash:7].[ext]')
+        }
+      },
+      {
+        // 对字体资源文件使用url-loader
+        test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          // hash:7 代表 7 位数的 hash
+          name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
+        }
+      }
+    ]
+  },
+  // 这些选项用于配置polyfill或mock某些node.js全局变量和模块。
+  // 这可以使最初为nodejs编写的代码可以在浏览器端运行
+  node: {
+    //这个配置是一个对象，其中的每个属性都是nodejs全局变量或模块的名称
+    // prevent webpack from injecting useless setImmediate polyfill because Vue
+    // source contains it (although only uses it if it's native).
+    // false表示什么都不提供。如果获取此对象的代码，可能会因为获取不到此对象而触发ReferenceError错误
+    setImmediate: false,
+    // prevent webpack from injecting mocks to Node native modules
+    // that does not make sense for the client
+    // 设置成empty则表示提供一个空对象
+    dgram: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty',
+    child_process: 'empty'
+  }

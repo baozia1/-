@@ -1,0 +1,7 @@
+基于promise用于浏览器和node.js的http客户端
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+支持浏览器和Nodejs
+转换请求和响应
+拦截请求和响应
+取消请求
+自动转换json

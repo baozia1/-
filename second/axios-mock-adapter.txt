@@ -1,0 +1,2 @@
+<script src="https://unpkg.com/axios-mock-adapter/dist/axios-mock-adapter.js"></script>
+<script src="https://unpkg.com/axios-mock-adapter/dist/axios-mock-adapter.min.js"></script>
